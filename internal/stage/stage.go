@@ -18,16 +18,18 @@ func New(s *store.Store) *Stage {
 	return &Stage{store: s}
 }
 
-// AddStage 登记一个工艺阶段。start 必须不早于上一阶段起点，且 end（若非 0）必须大于 start。
+// AddStage 登记一个工艺阶段。相邻阶段允许共享边界（半开窗 [start, end)），
+// 故后一阶段的 start 可以等于上一阶段的 end；end（若非 0）必须大于 start。
 func (st *Stage) AddStage(batchID int64, name string, startUnix, endUnix int64) (*model.Stage, error) {
 	if endUnix != 0 && endUnix <= startUnix {
 		return nil, model.ErrStageOrder
 	}
-	lastStart, err := st.store.LastStageEndUnix(batchID)
+	lastEnd, err := st.store.LastStageEndUnix(batchID)
 	if err != nil {
 		return nil, err
 	}
-	if startUnix <= lastStart {
+	// 边界时刻归入后一阶段：start 只需不早于上一阶段 end（相等即拼接）。
+	if startUnix < lastEnd {
 		return nil, model.ErrStageOrder
 	}
 	seq, err := st.store.MaxStageSeq(batchID)

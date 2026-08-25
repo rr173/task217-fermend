@@ -18,13 +18,15 @@ func BuildWindows(stages []*model.Stage) []Window {
 	return out
 }
 
-// Locate 返回时刻 t 所在的阶段名；不在任何阶段返回空串。
+// Locate 返回时刻 t 所在的阶段名；边界时刻归入后一阶段（半开窗 [Start, End)）。
+// 窗口按 seq 升序，故首个命中者即为答案：t 落在前一窗口的 End 上时，前一窗口已不覆盖，
+// 循环前进到以该点为 Start 的后一窗口并命中之。
 func Locate(windows []Window, t int64) string {
 	for _, w := range windows {
 		if t < w.Start {
 			continue
 		}
-		if w.End == 0 || t <= w.End {
+		if w.End == 0 || t < w.End {
 			return w.Name
 		}
 	}
