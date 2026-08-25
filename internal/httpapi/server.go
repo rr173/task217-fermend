@@ -89,6 +89,8 @@ func statusOf(err error) int {
 	switch {
 	case errors.Is(err, model.ErrNotFound):
 		return http.StatusNotFound
+	case errors.Is(err, model.ErrStoreUnavailable):
+		return http.StatusServiceUnavailable
 	case errors.Is(err, model.ErrConflict),
 		errors.Is(err, model.ErrDuplicate),
 		errors.Is(err, model.ErrSealed),

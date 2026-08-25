@@ -20,15 +20,20 @@ type statsResponse struct {
 }
 
 func (s *Server) stats(w http.ResponseWriter, r *http.Request) {
+	db := s.svc.Store.DB()
+	if db == nil {
+		writeErr(w, model.ErrStoreUnavailable)
+		return
+	}
 	var out statsResponse
-	if err := s.svc.Store.DB().QueryRow(`SELECT COUNT(*) FROM batches`).Scan(&out.Batches); err != nil {
+	if err := db.QueryRow(`SELECT COUNT(*) FROM batches`).Scan(&out.Batches); err != nil {
 		writeErr(w, model.ErrNotFound)
 		return
 	}
-	_ = s.svc.Store.DB().QueryRow(`SELECT COUNT(*) FROM channels`).Scan(&out.Channels)
-	_ = s.svc.Store.DB().QueryRow(`SELECT COUNT(*) FROM samples`).Scan(&out.Samples)
-	_ = s.svc.Store.DB().QueryRow(`SELECT COUNT(*) FROM segments`).Scan(&out.Segments)
-	_ = s.svc.Store.DB().QueryRow(`SELECT COUNT(*) FROM endpoints`).Scan(&out.Endpoints)
-	_ = s.svc.Store.DB().QueryRow(`SELECT COUNT(*) FROM snapshots`).Scan(&out.Snapshots)
+	_ = db.QueryRow(`SELECT COUNT(*) FROM channels`).Scan(&out.Channels)
+	_ = db.QueryRow(`SELECT COUNT(*) FROM samples`).Scan(&out.Samples)
+	_ = db.QueryRow(`SELECT COUNT(*) FROM segments`).Scan(&out.Segments)
+	_ = db.QueryRow(`SELECT COUNT(*) FROM endpoints`).Scan(&out.Endpoints)
+	_ = db.QueryRow(`SELECT COUNT(*) FROM snapshots`).Scan(&out.Snapshots)
 	writeJSON(w, http.StatusOK, out)
 }

@@ -15,6 +15,9 @@ func decodeTime(s string) (time.Time, error) {
 
 // CreateBatch 登记一个发酵批次。
 func (s *Store) CreateBatch(b *model.Batch) (*model.Batch, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	res, err := s.db.Exec(
 		`INSERT INTO batches (name, strain, bioreactor, status, created_at, updated_at)
 		 VALUES (?, ?, ?, ?, ?, ?)`,
@@ -30,6 +33,9 @@ func (s *Store) CreateBatch(b *model.Batch) (*model.Batch, error) {
 
 // GetBatch 按 id 读取批次。
 func (s *Store) GetBatch(id int64) (*model.Batch, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	row := s.db.QueryRow(
 		`SELECT id, name, strain, bioreactor, status, created_at, updated_at
 		 FROM batches WHERE id = ?`, id)
@@ -45,6 +51,9 @@ func (s *Store) GetBatch(id int64) (*model.Batch, error) {
 
 // ListBatches 按创建时间倒序列出批次。
 func (s *Store) ListBatches(limit, offset int) ([]*model.Batch, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	rows, err := s.db.Query(
 		`SELECT id, name, strain, bioreactor, status, created_at, updated_at
 		 FROM batches ORDER BY id DESC LIMIT ? OFFSET ?`, limit, offset)
@@ -68,6 +77,9 @@ func (s *Store) ListBatches(limit, offset int) ([]*model.Batch, error) {
 
 // UpdateBatchStatus 原子地更新批次状态，仅在当前状态匹配时成功。
 func (s *Store) UpdateBatchStatus(id int64, from, to model.BatchStatus) error {
+	if err := s.check(); err != nil {
+		return err
+	}
 	res, err := s.db.Exec(
 		`UPDATE batches SET status = ?, updated_at = ? WHERE id = ? AND status = ?`,
 		string(to), encodeTime(time.Now().UTC()), id, string(from))
@@ -83,6 +95,9 @@ func (s *Store) UpdateBatchStatus(id int64, from, to model.BatchStatus) error {
 
 // CountBatches 返回批次总数，供自检与统计使用。
 func (s *Store) CountBatches() (int64, error) {
+	if err := s.check(); err != nil {
+		return 0, err
+	}
 	var n int64
 	err := s.db.QueryRow(`SELECT COUNT(*) FROM batches`).Scan(&n)
 	return n, err

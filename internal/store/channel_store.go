@@ -6,6 +6,9 @@ import (
 
 // CreateChannel 登记一个传感器通道。
 func (s *Store) CreateChannel(c *model.Channel) (*model.Channel, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	res, err := s.db.Exec(
 		`INSERT INTO channels (batch_id, name, kind, unit, status, created_at)
 		 VALUES (?, ?, ?, ?, ?, ?)`,
@@ -20,6 +23,9 @@ func (s *Store) CreateChannel(c *model.Channel) (*model.Channel, error) {
 
 // GetChannel 按 id 读取通道。
 func (s *Store) GetChannel(id int64) (*model.Channel, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	row := s.db.QueryRow(
 		`SELECT id, batch_id, name, kind, unit, status, created_at
 		 FROM channels WHERE id = ?`, id)
@@ -34,6 +40,9 @@ func (s *Store) GetChannel(id int64) (*model.Channel, error) {
 
 // ListChannels 列出某批次的全部通道。
 func (s *Store) ListChannels(batchID int64) ([]*model.Channel, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	rows, err := s.db.Query(
 		`SELECT id, batch_id, name, kind, unit, status, created_at
 		 FROM channels WHERE batch_id = ? ORDER BY id`, batchID)
@@ -56,6 +65,9 @@ func (s *Store) ListChannels(batchID int64) ([]*model.Channel, error) {
 
 // ListActiveChannels 列出未被剔除的通道。
 func (s *Store) ListActiveChannels(batchID int64) ([]*model.Channel, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	rows, err := s.db.Query(
 		`SELECT id, batch_id, name, kind, unit, status, created_at
 		 FROM channels WHERE batch_id = ? AND status = ? ORDER BY id`,
@@ -79,6 +91,9 @@ func (s *Store) ListActiveChannels(batchID int64) ([]*model.Channel, error) {
 
 // ExcludeChannel 把通道标记为剔除（仅当当前为 active）。
 func (s *Store) ExcludeChannel(id int64) error {
+	if err := s.check(); err != nil {
+		return err
+	}
 	res, err := s.db.Exec(
 		`UPDATE channels SET status = ? WHERE id = ? AND status = ?`,
 		string(model.ChannelExcluded), id, string(model.ChannelActive))

@@ -6,6 +6,9 @@ import (
 
 // CreateSnapshot 写入一个诊断快照。
 func (s *Store) CreateSnapshot(sn *model.DiagnosisSnapshot) (*model.DiagnosisSnapshot, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	res, err := s.db.Exec(
 		`INSERT INTO snapshots (batch_id, version, status, evidence, endpoint_t_unix, created_at)
 		 VALUES (?, ?, ?, ?, ?, ?)`,
@@ -19,6 +22,9 @@ func (s *Store) CreateSnapshot(sn *model.DiagnosisSnapshot) (*model.DiagnosisSna
 
 // GetSnapshot 按 id 读取快照。
 func (s *Store) GetSnapshot(id int64) (*model.DiagnosisSnapshot, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	row := s.db.QueryRow(
 		`SELECT id, batch_id, version, status, evidence, endpoint_t_unix, created_at
 		 FROM snapshots WHERE id = ?`, id)
@@ -33,6 +39,9 @@ func (s *Store) GetSnapshot(id int64) (*model.DiagnosisSnapshot, error) {
 
 // GetSnapshotByVersion 按批次+版本读取快照。
 func (s *Store) GetSnapshotByVersion(batchID int64, version int) (*model.DiagnosisSnapshot, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	row := s.db.QueryRow(
 		`SELECT id, batch_id, version, status, evidence, endpoint_t_unix, created_at
 		 FROM snapshots WHERE batch_id = ? AND version = ?`, batchID, version)
@@ -47,6 +56,9 @@ func (s *Store) GetSnapshotByVersion(batchID int64, version int) (*model.Diagnos
 
 // ListSnapshots 按版本倒序列出批次快照。
 func (s *Store) ListSnapshots(batchID int64) ([]*model.DiagnosisSnapshot, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	rows, err := s.db.Query(
 		`SELECT id, batch_id, version, status, evidence, endpoint_t_unix, created_at
 		 FROM snapshots WHERE batch_id = ? ORDER BY version DESC`, batchID)
@@ -69,6 +81,9 @@ func (s *Store) ListSnapshots(batchID int64) ([]*model.DiagnosisSnapshot, error)
 
 // MaxSnapshotVersion 返回批次最大快照版本。
 func (s *Store) MaxSnapshotVersion(batchID int64) (int, error) {
+	if err := s.check(); err != nil {
+		return 0, err
+	}
 	var n int
 	err := s.db.QueryRow(
 		`SELECT COALESCE(MAX(version), 0) FROM snapshots WHERE batch_id = ?`, batchID).Scan(&n)
@@ -77,6 +92,9 @@ func (s *Store) MaxSnapshotVersion(batchID int64) (int, error) {
 
 // UpdateSnapshotStatus 更新快照状态（发布→替代等）。
 func (s *Store) UpdateSnapshotStatus(id int64, status model.SnapshotStatus) error {
+	if err := s.check(); err != nil {
+		return err
+	}
 	res, err := s.db.Exec(
 		`UPDATE snapshots SET status = ? WHERE id = ?`, string(status), id)
 	if err != nil {

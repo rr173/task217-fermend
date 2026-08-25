@@ -6,6 +6,9 @@ import (
 
 // CreateSegment 写入一个传感器段。
 func (s *Store) CreateSegment(seg *model.SensorSegment) (*model.SensorSegment, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	res, err := s.db.Exec(
 		`INSERT INTO segments (batch_id, channel_id, start_unix, end_unix, status, lag_secs, gain, offset, created_at)
 		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -20,6 +23,9 @@ func (s *Store) CreateSegment(seg *model.SensorSegment) (*model.SensorSegment, e
 
 // GetSegment 按 id 读取段。
 func (s *Store) GetSegment(id int64) (*model.SensorSegment, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	row := s.db.QueryRow(
 		`SELECT id, batch_id, channel_id, start_unix, end_unix, status, lag_secs, gain, offset, created_at
 		 FROM segments WHERE id = ?`, id)
@@ -35,6 +41,9 @@ func (s *Store) GetSegment(id int64) (*model.SensorSegment, error) {
 
 // ListSegments 按时间窗升序列出某通道的段。
 func (s *Store) ListSegments(channelID int64) ([]*model.SensorSegment, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	rows, err := s.db.Query(
 		`SELECT id, batch_id, channel_id, start_unix, end_unix, status, lag_secs, gain, offset, created_at
 		 FROM segments WHERE channel_id = ? ORDER BY start_unix`, channelID)
@@ -58,6 +67,9 @@ func (s *Store) ListSegments(channelID int64) ([]*model.SensorSegment, error) {
 
 // UpdateSegmentStatus 更新段状态与校正参数。
 func (s *Store) UpdateSegmentStatus(id int64, status model.SegmentStatus, lagSecs, gain, offset float64) error {
+	if err := s.check(); err != nil {
+		return err
+	}
 	res, err := s.db.Exec(
 		`UPDATE segments SET status = ?, lag_secs = ?, gain = ?, offset = ? WHERE id = ?`,
 		string(status), lagSecs, gain, offset, id)

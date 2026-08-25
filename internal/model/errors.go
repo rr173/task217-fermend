@@ -18,4 +18,5 @@ var (
 	ErrChannelExcluded    = errors.New("channel excluded")
 	ErrSnapshotSealed     = errors.New("snapshot sealed")
 	ErrEndpointConfirmed  = errors.New("endpoint already confirmed")
+	ErrStoreUnavailable   = errors.New("store unavailable")
 )

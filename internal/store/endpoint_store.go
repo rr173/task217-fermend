@@ -6,6 +6,9 @@ import (
 
 // CreateEndpoint 写入一个终点候选。幂等键 (batch_id, version, source)。
 func (s *Store) CreateEndpoint(e *model.EndpointCandidate) (*model.EndpointCandidate, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	res, err := s.db.Exec(
 		`INSERT INTO endpoints (batch_id, version, source, t_unix, value, status, reason, created_at)
 		 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -19,6 +22,9 @@ func (s *Store) CreateEndpoint(e *model.EndpointCandidate) (*model.EndpointCandi
 
 // GetEndpoint 按 id 读取终点候选。
 func (s *Store) GetEndpoint(id int64) (*model.EndpointCandidate, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	row := s.db.QueryRow(
 		`SELECT id, batch_id, version, source, t_unix, value, status, reason, created_at
 		 FROM endpoints WHERE id = ?`, id)
@@ -33,6 +39,9 @@ func (s *Store) GetEndpoint(id int64) (*model.EndpointCandidate, error) {
 
 // ListEndpoints 列出某批次某版本的全部终点候选。
 func (s *Store) ListEndpoints(batchID int64, version int) ([]*model.EndpointCandidate, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	rows, err := s.db.Query(
 		`SELECT id, batch_id, version, source, t_unix, value, status, reason, created_at
 		 FROM endpoints WHERE batch_id = ? AND version = ? ORDER BY source`, batchID, version)
@@ -55,6 +64,9 @@ func (s *Store) ListEndpoints(batchID int64, version int) ([]*model.EndpointCand
 
 // MaxEndpointVersion 返回批次最大终点版本。
 func (s *Store) MaxEndpointVersion(batchID int64) (int, error) {
+	if err := s.check(); err != nil {
+		return 0, err
+	}
 	var n int
 	err := s.db.QueryRow(
 		`SELECT COALESCE(MAX(version), 0) FROM endpoints WHERE batch_id = ?`, batchID).Scan(&n)
@@ -63,6 +75,9 @@ func (s *Store) MaxEndpointVersion(batchID int64) (int, error) {
 
 // UpdateEndpointStatus 更新终点状态（预测→确认/否决等）。
 func (s *Store) UpdateEndpointStatus(id int64, status model.EndpointStatus, reason string) error {
+	if err := s.check(); err != nil {
+		return err
+	}
 	res, err := s.db.Exec(
 		`UPDATE endpoints SET status = ?, reason = ? WHERE id = ?`,
 		string(status), reason, id)

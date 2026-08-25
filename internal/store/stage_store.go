@@ -6,6 +6,9 @@ import (
 
 // CreateStage 写入一个工艺阶段；seq 由调用方（stage 模块）确定。
 func (s *Store) CreateStage(st *model.Stage) (*model.Stage, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	res, err := s.db.Exec(
 		`INSERT INTO stages (batch_id, name, start_unix, end_unix, seq, created_at)
 		 VALUES (?, ?, ?, ?, ?, ?)`,
@@ -19,6 +22,9 @@ func (s *Store) CreateStage(st *model.Stage) (*model.Stage, error) {
 
 // GetStage 按 id 读取阶段。
 func (s *Store) GetStage(id int64) (*model.Stage, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	row := s.db.QueryRow(
 		`SELECT id, batch_id, name, start_unix, end_unix, seq, created_at
 		 FROM stages WHERE id = ?`, id)
@@ -33,6 +39,9 @@ func (s *Store) GetStage(id int64) (*model.Stage, error) {
 
 // ListStages 按 seq 升序列出批次阶段。
 func (s *Store) ListStages(batchID int64) ([]*model.Stage, error) {
+	if err := s.check(); err != nil {
+		return nil, err
+	}
 	rows, err := s.db.Query(
 		`SELECT id, batch_id, name, start_unix, end_unix, seq, created_at
 		 FROM stages WHERE batch_id = ? ORDER BY seq`, batchID)
@@ -55,6 +64,9 @@ func (s *Store) ListStages(batchID int64) ([]*model.Stage, error) {
 
 // MaxStageSeq 返回批次已登记的最大阶段序号。
 func (s *Store) MaxStageSeq(batchID int64) (int, error) {
+	if err := s.check(); err != nil {
+		return 0, err
+	}
 	var n int
 	err := s.db.QueryRow(
 		`SELECT COALESCE(MAX(seq), 0) FROM stages WHERE batch_id = ?`, batchID).Scan(&n)
@@ -63,6 +75,9 @@ func (s *Store) MaxStageSeq(batchID int64) (int, error) {
 
 // LastStageEndUnix 返回最后一个阶段的结束时间窗（用于逆序拒绝）。
 func (s *Store) LastStageEndUnix(batchID int64) (int64, error) {
+	if err := s.check(); err != nil {
+		return 0, err
+	}
 	var v int64
 	err := s.db.QueryRow(
 		`SELECT COALESCE(MAX(start_unix), 0) FROM stages WHERE batch_id = ?`, batchID).Scan(&v)
