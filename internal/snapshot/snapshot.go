@@ -36,6 +36,7 @@ func (sn *Snapshot) CreateDraft(batchID int64, endpointT int64, evidence string)
 }
 
 // Publish 发布草稿快照（draft → published）。
+// 发布只改状态：证据必须随快照一并冻结并在发布后继续可读。
 func (sn *Snapshot) Publish(id int64) (*model.DiagnosisSnapshot, error) {
 	s, err := sn.store.GetSnapshot(id)
 	if err != nil {
@@ -44,7 +45,6 @@ func (sn *Snapshot) Publish(id int64) (*model.DiagnosisSnapshot, error) {
 	if s.Status != model.SnapshotDraft {
 		return nil, model.ErrSnapshotSealed
 	}
-	s.Evidence = ""
 	if err := sn.store.UpdateSnapshotStatus(id, model.SnapshotPublished); err != nil {
 		return nil, err
 	}
@@ -80,4 +80,9 @@ func (sn *Snapshot) Supersede(oldID, newID int64) (*model.DiagnosisSnapshot, err
 // ListSnapshots 列出批次快照。
 func (sn *Snapshot) ListSnapshots(batchID int64) ([]*model.DiagnosisSnapshot, error) {
 	return sn.store.ListSnapshots(batchID)
+}
+
+// GetByVersion 按批次与版本读取快照，用于回取已发布证据。
+func (sn *Snapshot) GetByVersion(batchID int64, version int) (*model.DiagnosisSnapshot, error) {
+	return sn.store.GetSnapshotByVersion(batchID, version)
 }

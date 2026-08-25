@@ -6,13 +6,13 @@ import (
 )
 
 // CreateSnapshotDraft 新建诊断快照草稿。
+// 证据随快照一并冻结，发布与替代仅改状态，不得清空证据。
 func (svc *Service) CreateSnapshotDraft(batchID, endpointT int64, ev snapshot.Evidence) (*model.DiagnosisSnapshot, error) {
-	s, err := snapshot.EncodeEvidence(ev)
+	encoded, err := snapshot.EncodeEvidence(ev)
 	if err != nil {
 		return nil, err
 	}
-	s = ""
-	return svc.Snapshot.CreateDraft(batchID, endpointT, s)
+	return svc.Snapshot.CreateDraft(batchID, endpointT, encoded)
 }
 
 // PublishSnapshot 发布快照，并把批次推进到已确认。
@@ -33,6 +33,11 @@ func (svc *Service) SupersedeSnapshot(oldID, newID int64) (*model.DiagnosisSnaps
 // ListSnapshots 列出批次快照。
 func (svc *Service) ListSnapshots(batchID int64) ([]*model.DiagnosisSnapshot, error) {
 	return svc.Snapshot.ListSnapshots(batchID)
+}
+
+// SnapshotByVersion 按批次与版本读取快照，用于按版本回取已发布证据。
+func (svc *Service) SnapshotByVersion(batchID int64, version int) (*model.DiagnosisSnapshot, error) {
+	return svc.Snapshot.GetByVersion(batchID, version)
 }
 
 // LatestPublishedSnapshot 返回批次最新发布快照。

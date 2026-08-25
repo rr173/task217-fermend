@@ -20,7 +20,7 @@ func (s *Store) CreateSnapshot(sn *model.DiagnosisSnapshot) (*model.DiagnosisSna
 // GetSnapshot 按 id 读取快照。
 func (s *Store) GetSnapshot(id int64) (*model.DiagnosisSnapshot, error) {
 	row := s.db.QueryRow(
-		`SELECT id, batch_id, version, status, '', endpoint_t_unix, created_at
+		`SELECT id, batch_id, version, status, evidence, endpoint_t_unix, created_at
 		 FROM snapshots WHERE id = ?`, id)
 	var sn model.DiagnosisSnapshot
 	var created string
@@ -34,7 +34,7 @@ func (s *Store) GetSnapshot(id int64) (*model.DiagnosisSnapshot, error) {
 // GetSnapshotByVersion 按批次+版本读取快照。
 func (s *Store) GetSnapshotByVersion(batchID int64, version int) (*model.DiagnosisSnapshot, error) {
 	row := s.db.QueryRow(
-		`SELECT id, batch_id, version, status, '', endpoint_t_unix, created_at
+		`SELECT id, batch_id, version, status, evidence, endpoint_t_unix, created_at
 		 FROM snapshots WHERE batch_id = ? AND version = ?`, batchID, version)
 	var sn model.DiagnosisSnapshot
 	var created string
@@ -48,7 +48,7 @@ func (s *Store) GetSnapshotByVersion(batchID int64, version int) (*model.Diagnos
 // ListSnapshots 按版本倒序列出批次快照。
 func (s *Store) ListSnapshots(batchID int64) ([]*model.DiagnosisSnapshot, error) {
 	rows, err := s.db.Query(
-		`SELECT id, batch_id, version, status, '', endpoint_t_unix, created_at
+		`SELECT id, batch_id, version, status, evidence, endpoint_t_unix, created_at
 		 FROM snapshots WHERE batch_id = ? ORDER BY version DESC`, batchID)
 	if err != nil {
 		return nil, err

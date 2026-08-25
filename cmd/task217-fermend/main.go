@@ -208,6 +208,25 @@ func runSmoke() error {
 	if published.Version != draft.Version {
 		return fmt.Errorf("snapshot version mismatch after restart")
 	}
+	// 重启后证据必须继续可读：发布动作不得清空证据。
+	if published.Evidence == "" {
+		return fmt.Errorf("published snapshot evidence lost after restart")
+	}
+	ev2, err := snapshot.DecodeEvidence(published.Evidence)
+	if err != nil {
+		return fmt.Errorf("decode evidence after restart: %w", err)
+	}
+	if ev2.Verdict != ev.Verdict || ev2.DeviationSecs != ev.DeviationSecs || ev2.EndpointT != ev.EndpointT {
+		return fmt.Errorf("evidence mismatch after restart: %#v", ev2)
+	}
+	// 列表与按版本读取同样不得返回空证据。
+	byVer, err := svc2.SnapshotByVersion(batch.ID, draft.Version)
+	if err != nil {
+		return err
+	}
+	if byVer.Evidence == "" {
+		return fmt.Errorf("snapshot-by-version evidence lost after restart")
+	}
 
 	fmt.Printf("smoke: batch=%d ph_knee before=%d after=%d sampled=500 deviation=%ds verdict=%s snapshot=v%d\n",
 		batch.ID, phKneeBefore, phKneeAfter, cmp.DeviationSecs, cmp.Verdict, published.Version)
