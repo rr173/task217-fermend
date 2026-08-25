@@ -26,7 +26,7 @@ func (svc *Service) PublishSnapshot(snapshotID int64) (*model.DiagnosisSnapshot,
 
 // SupersedeSnapshot 用新快照替代已发布快照。
 func (svc *Service) SupersedeSnapshot(oldID, newID int64) (*model.DiagnosisSnapshot, error) {
-	return svc.Snapshot.Supersede(newID, oldID)
+	return svc.Snapshot.Supersede(oldID, newID)
 }
 
 // ListSnapshots 列出批次快照。

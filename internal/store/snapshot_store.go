@@ -49,7 +49,7 @@ func (s *Store) GetSnapshotByVersion(batchID int64, version int) (*model.Diagnos
 func (s *Store) ListSnapshots(batchID int64) ([]*model.DiagnosisSnapshot, error) {
 	rows, err := s.db.Query(
 		`SELECT id, batch_id, version, status, evidence, endpoint_t_unix, created_at
-		 FROM snapshots WHERE batch_id = ? ORDER BY version ASC`, batchID)
+		 FROM snapshots WHERE batch_id = ? ORDER BY version DESC`, batchID)
 	if err != nil {
 		return nil, err
 	}

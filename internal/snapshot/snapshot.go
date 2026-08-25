@@ -51,20 +51,20 @@ func (sn *Snapshot) Publish(id int64) (*model.DiagnosisSnapshot, error) {
 }
 
 // Supersede 用新快照替代已发布快照：旧 → superseded，新 → published。
-// 已封存（superseded）快照不可再次被替代。
+// 旧快照必须是 published，新快照必须是 draft；已封存（superseded）快照不可再次被替代。
 func (sn *Snapshot) Supersede(oldID, newID int64) (*model.DiagnosisSnapshot, error) {
 	old, err := sn.store.GetSnapshot(oldID)
 	if err != nil {
 		return nil, err
 	}
-	if old.Status != model.SnapshotDraft {
+	if old.Status != model.SnapshotPublished {
 		return nil, model.ErrSnapshotSealed
 	}
 	newSnap, err := sn.store.GetSnapshot(newID)
 	if err != nil {
 		return nil, err
 	}
-	if newSnap.Status != model.SnapshotPublished {
+	if newSnap.Status != model.SnapshotDraft {
 		return nil, model.ErrSnapshotSealed
 	}
 	if err := sn.store.UpdateSnapshotStatus(oldID, model.SnapshotSuperseded); err != nil {
