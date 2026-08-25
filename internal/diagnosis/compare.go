@@ -16,9 +16,10 @@ type ComparisonResult struct {
 }
 
 // Compare 比较预测终点与实际采样终点，返回偏差与结论。
+// 偏差在容差以内（含等于容差）判定为 confirmed；超出容差判定为 conflict。
 func (d *Diagnosis) Compare(predictedT, sampledT int64) ComparisonResult {
 	dev := int64(math.Abs(float64(predictedT - sampledT)))
-	within := dev < d.ToleranceSecs
+	within := dev <= d.ToleranceSecs
 	verdict := "conflict"
 	if within {
 		verdict = "confirmed"
@@ -51,7 +52,7 @@ func (d *Diagnosis) ResolveWithSample(batchID int64, version int, sampledT int64
 	}
 	res := d.Compare(combined.TUnix, sampledT)
 	status := model.EndpointConflict
-	if res.WithinTolerance && res.DeviationSecs < d.ToleranceSecs {
+	if res.WithinTolerance {
 		status = model.EndpointConfirmed
 	}
 	if err := d.store.UpdateEndpointStatus(combined.ID, status, res.Verdict); err != nil {

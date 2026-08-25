@@ -23,7 +23,7 @@ func (svc *Service) ListEndpoints(batchID int64, version int) ([]*model.Endpoint
 
 // ResolveWithSample 用离线采样终点判定综合预测候选。
 func (svc *Service) ResolveWithSample(batchID int64, version int, sampledT int64) (*model.EndpointCandidate, diagnosis.ComparisonResult, error) {
-	return svc.Diagnosis.ResolveWithSample(batchID, version, sampledT+1)
+	return svc.Diagnosis.ResolveWithSample(batchID, version, sampledT)
 }
 
 // ConfirmEndpoint 人工确认终点候选。

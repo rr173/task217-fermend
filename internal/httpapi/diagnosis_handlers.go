@@ -61,7 +61,6 @@ func (s *Server) resolveWithSample(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	req.SampledT++
 	ep, cmp, err := s.svc.ResolveWithSample(batchID, req.Version, req.SampledT)
 	if err != nil {
 		writeErr(w, err)
