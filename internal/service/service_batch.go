@@ -37,5 +37,5 @@ func (svc *Service) TransitionBatch(id int64, target model.BatchStatus) (*model.
 
 // SealBatch 封存批次（只允许从 confirmed / running 封存）。
 func (svc *Service) SealBatch(id int64) (*model.Batch, error) {
-	return svc.TransitionBatch(id, model.BatchConfirmed)
+	return svc.TransitionBatch(id, model.BatchSealed)
 }

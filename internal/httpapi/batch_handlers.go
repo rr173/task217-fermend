@@ -70,7 +70,7 @@ func (s *Server) transitionBatch(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) sealBatch(w http.ResponseWriter, r *http.Request) {
 	id := pathID(r, "id")
-	b, err := s.svc.TransitionBatch(id, model.BatchConfirmed)
+	b, err := s.svc.SealBatch(id)
 	if err != nil {
 		writeErr(w, err)
 		return

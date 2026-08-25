@@ -18,7 +18,7 @@ var ValidBatchTransitions = map[BatchStatus][]BatchStatus{
 	BatchPreparing:        {BatchRunning},
 	BatchRunning:          {BatchPendingDiagnosis, BatchSealed},
 	BatchPendingDiagnosis: {BatchConfirmed},
-	BatchConfirmed:        {},
+	BatchConfirmed:        {BatchSealed},
 	BatchSealed:           {},
 }
 
