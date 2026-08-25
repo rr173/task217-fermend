@@ -36,15 +36,16 @@ func (d *Diagnosis) ChannelLagSecs(channelID int64) float64 {
 	return lag
 }
 
-// InferEndpoints 读取全部 active 通道，识别各自拐点并做滞后校正，生成终点候选。
+// InferEndpoints 读取全部 active（未剔除）通道，识别各自拐点并做滞后校正，生成终点候选。
 // 返回写入的候选列表与新的诊断版本号。
 func (d *Diagnosis) InferEndpoints(batchID int64) ([]*model.EndpointCandidate, int, error) {
-	channels, err := d.store.ListChannels(batchID)
+	channels, err := d.store.ListActiveChannels(batchID)
 	if err != nil {
 		return nil, 0, err
 	}
 	if len(channels) == 0 {
-		return nil, 0, model.ErrNotFound
+		// 全部通道被剔除或尚无通道：返回可处理的无有效通道结果，而非把缺失当作 not found。
+		return nil, 0, model.ErrNoActiveDiagnosis
 	}
 
 	version, err := d.store.MaxEndpointVersion(batchID)

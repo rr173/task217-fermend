@@ -95,7 +95,8 @@ func statusOf(err error) int {
 		errors.Is(err, model.ErrSnapshotSealed),
 		errors.Is(err, model.ErrEndpointConfirmed),
 		errors.Is(err, model.ErrLateSample),
-		errors.Is(err, model.ErrChannelExcluded):
+		errors.Is(err, model.ErrChannelExcluded),
+		errors.Is(err, model.ErrNoActiveDiagnosis):
 		return http.StatusConflict
 	case errors.Is(err, model.ErrInvalidArgument),
 		errors.Is(err, model.ErrUnitMismatch),

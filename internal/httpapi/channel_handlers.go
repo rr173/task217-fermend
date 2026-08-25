@@ -47,5 +47,5 @@ func (s *Server) excludeChannel(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]bool{"excluded": false})
+	writeJSON(w, http.StatusOK, map[string]bool{"excluded": true})
 }

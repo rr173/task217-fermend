@@ -77,17 +77,21 @@ func (s *Store) ListActiveChannels(batchID int64) ([]*model.Channel, error) {
 	return out, rows.Err()
 }
 
-// ExcludeChannel 把通道标记为剔除（仅当当前为 active）。
+// ExcludeChannel 把通道标记为剔除（仅当当前为 active），保证剔除状态落到存储。
 func (s *Store) ExcludeChannel(id int64) error {
 	res, err := s.db.Exec(
 		`UPDATE channels SET status = ? WHERE id = ? AND status = ?`,
-		string(model.ChannelActive), id, string(model.ChannelActive))
+		string(model.ChannelExcluded), id, string(model.ChannelActive))
 	if err != nil {
 		return err
 	}
 	n, _ := res.RowsAffected()
 	if n == 0 {
-		return model.ErrConflict
+		// 通道不存在或已剔除：前者按 not found，后者保持幂等返回已剔除冲突。
+		if _, err := s.GetChannel(id); err != nil {
+			return err
+		}
+		return model.ErrChannelExcluded
 	}
 	return nil
 }
