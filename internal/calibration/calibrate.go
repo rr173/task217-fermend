@@ -44,13 +44,22 @@ func (c *Calibration) ListSegments(channelID int64) ([]*model.SensorSegment, err
 }
 
 // EstimateAndMarkLag 以参考通道的谷点/拐点为基准，估计目标通道滞后并落段。
+// 参考与目标各自按通道物理量类型选取事件检测器，使不同信号特征的拐点可比。
 // 返回估计出的滞后秒数与创建的段。
 func (c *Calibration) EstimateAndMarkLag(batchID, refChannelID, targetChannelID int64, refPoints, targetPoints []*model.SamplePoint) (*model.SensorSegment, error) {
-	refT, _, ok := FindMinTime(refPoints)
+	refCh, err := c.store.GetChannel(refChannelID)
+	if err != nil {
+		return nil, err
+	}
+	tgtCh, err := c.store.GetChannel(targetChannelID)
+	if err != nil {
+		return nil, err
+	}
+	refT, ok := EventTime(refCh.Kind, refPoints)
 	if !ok {
 		return nil, model.ErrNotFound
 	}
-	tgtT, _, ok := FindMinTime(targetPoints)
+	tgtT, ok := EventTime(tgtCh.Kind, targetPoints)
 	if !ok {
 		return nil, model.ErrNotFound
 	}

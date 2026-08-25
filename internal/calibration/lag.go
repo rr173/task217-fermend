@@ -37,10 +37,47 @@ func FindMaxSlopeTime(points []*model.SamplePoint) (int64, bool) {
 	return bestT, true
 }
 
+// FindFeedKneeTime 返回累积补料曲线最大二阶变化（速率转折）点的时刻。
+func FindFeedKneeTime(points []*model.SamplePoint) (int64, bool) {
+	if len(points) < 3 {
+		return 0, false
+	}
+	bestT := points[1].TUnix
+	bestCurv := 0.0
+	for i := 2; i < len(points); i++ {
+		v1 := points[i-1].Value - points[i-2].Value
+		v2 := points[i].Value - points[i-1].Value
+		curv := math.Abs(v2 - v1)
+		if curv > bestCurv {
+			bestCurv = curv
+			bestT = points[i].TUnix
+		}
+	}
+	return bestT, true
+}
+
+// EventTime 按通道物理量类型选取事件检测器，返回该通道特征事件时刻。
+// 溶氧取谷点（回升起点）、pH 取最大斜率（拐点）、补料取速率转折点，
+// 与诊断阶段 InferEndpoints 的拐点识别口径一致，保证跨通道滞后估计可比。
+func EventTime(kind model.ChannelKind, points []*model.SamplePoint) (int64, bool) {
+	switch kind {
+	case model.KindDissolvedOxygen:
+		t, _, ok := FindMinTime(points)
+		return t, ok
+	case model.KindPH:
+		return FindMaxSlopeTime(points)
+	case model.KindFeed:
+		return FindFeedKneeTime(points)
+	default:
+		// 温度/搅拌等非拐点通道无可用事件时刻。
+		return 0, false
+	}
+}
+
 // EstimateLag 用同一物理事件（各自拐点/谷点）的时间差估计滞后秒数。
 // 返回 channel 相对 reference 的滞后（正值表示 channel 落后）。
 func EstimateLag(refEventT, channelEventT int64) float64 {
-	return float64(refEventT - channelEventT)
+	return float64(channelEventT - refEventT)
 }
 
 // GapDetect 检测相邻采样点间隔超过阈值的时间窗缺口。
